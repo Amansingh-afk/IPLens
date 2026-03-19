@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build:data": "node scripts/process-data.mjs",
-    "build": "node scripts/process-data.mjs && next build",
+    "build": "next build",
+    "build:full": "node scripts/process-data.mjs && next build",
     "start": "next start",
     "lint": "eslint"
   },
