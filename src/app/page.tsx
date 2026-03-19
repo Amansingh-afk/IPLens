@@ -307,6 +307,21 @@ export default function Home() {
           </div>
         </BentoCard>
       </div>
+
+      <footer className="mt-12 border-t border-card-border pt-6 pb-8">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <div className="flex items-center gap-2 text-xs text-muted">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            Analytics active
+          </div>
+          <p className="text-xs text-muted/60">
+            Built with Next.js &middot; Powered by Vercel Analytics
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
