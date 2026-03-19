@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: "IPLens — The Lens Through Which India Watches Cricket",
   description:
     "Interactive IPL data visualizations — player journeys, team rivalries, transfer flows, and 17 years of cricket history.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
