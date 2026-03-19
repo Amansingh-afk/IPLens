@@ -304,4 +304,117 @@ for (const [season, entries] of seasonRunsMap) {
 writeFileSync("public/data/seasons.json", JSON.stringify(seasons));
 console.log(`seasons.json: ${Object.keys(seasons).length} seasons`);
 
+// ── Knowledge Graph ──
+const kgNodes = [];
+const kgEdges = [];
+const kgNodeIds = new Set();
+
+function addNode(id, type, label, meta = {}) {
+  if (kgNodeIds.has(id)) return;
+  kgNodeIds.add(id);
+  kgNodes.push({ id, type, label, ...meta });
+}
+
+// Team nodes
+const allTeamNames = new Set();
+for (const d of data) {
+  allTeamNames.add(canon(d.batting_team));
+  allTeamNames.add(canon(d.bowling_team));
+}
+for (const t of allTeamNames) {
+  addNode(`team:${t}`, "team", t);
+}
+
+// Season nodes
+const allSeasonSet = new Set(data.map((d) => d._season));
+for (const s of allSeasonSet) {
+  addNode(`season:${s}`, "season", s);
+}
+
+// Venue nodes
+const allVenues = new Set();
+for (const d of data) {
+  if (d.venue) allVenues.add(d.venue);
+}
+for (const v of allVenues) {
+  addNode(`venue:${v}`, "venue", v, { city: data.find((d) => d.venue === v)?.city || "" });
+}
+
+// Player nodes (top 200 by runs to keep graph manageable)
+const topPlayers = players.slice(0, 200);
+for (const p of topPlayers) {
+  const totalRuns = p.seasons.reduce((s, x) => s + x.runs, 0);
+  const totalWickets = p.seasons.reduce((s, x) => s + x.wickets, 0);
+  addNode(`player:${p.name}`, "player", p.name, {
+    runs: totalRuns,
+    wickets: totalWickets,
+    seasons: p.seasons.length,
+  });
+}
+
+// Edges: player → played_for → team (per season)
+const edgeSet = new Set();
+for (const p of topPlayers) {
+  for (const s of p.seasons) {
+    const edgeId = `${p.name}|played_for|${s.team}|${s.season}`;
+    if (!edgeSet.has(edgeId)) {
+      edgeSet.add(edgeId);
+      kgEdges.push({
+        source: `player:${p.name}`,
+        target: `team:${s.team}`,
+        type: "played_for",
+        season: s.season,
+        runs: s.runs,
+        wickets: s.wickets,
+      });
+    }
+  }
+}
+
+// Edges: team → played_in → season
+for (const [, ts] of teamSeasonMap) {
+  kgEdges.push({
+    source: `team:${ts.team}`,
+    target: `season:${ts.season}`,
+    type: "played_in",
+    wins: ts.wins,
+    losses: ts.losses,
+  });
+}
+
+// Edges: team → match → team (from matchups, top rivalries)
+for (const mu of matchups.slice(0, 50)) {
+  kgEdges.push({
+    source: `team:${mu.team1}`,
+    target: `team:${mu.team2}`,
+    type: "rivalry",
+    matches: mu.totalMatches,
+    team1Wins: mu.team1Wins,
+    team2Wins: mu.team2Wins,
+  });
+}
+
+// Edges: match → played_at → venue (aggregate: team played at venue in season)
+const teamVenueSeason = new Map();
+for (const d of data) {
+  const key = `${canon(d.batting_team)}|${d.venue}|${d._season}`;
+  if (!teamVenueSeason.has(key)) {
+    teamVenueSeason.set(key, { team: canon(d.batting_team), venue: d.venue, season: d._season });
+  }
+}
+for (const [, tv] of teamVenueSeason) {
+  if (kgNodeIds.has(`venue:${tv.venue}`)) {
+    kgEdges.push({
+      source: `team:${tv.team}`,
+      target: `venue:${tv.venue}`,
+      type: "played_at",
+      season: tv.season,
+    });
+  }
+}
+
+const graph = { nodes: kgNodes, edges: kgEdges };
+writeFileSync("public/data/graph.json", JSON.stringify(graph));
+console.log(`graph.json: ${kgNodes.length} nodes, ${kgEdges.length} edges`);
+
 console.log("Done!");

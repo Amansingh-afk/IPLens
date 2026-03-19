@@ -65,6 +65,30 @@ export default function Home() {
           )}
         </BentoCard>
 
+        {/* Knowledge Graph */}
+        <BentoCard
+          title="Knowledge Graph"
+          subtitle="Players, teams, seasons — all connected"
+          href="/graph"
+          className="min-h-[180px]"
+          glowColor="#8b5cf6"
+        >
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+            <div className="flex items-center gap-1">
+              <span className="inline-block h-3 w-3 rounded-full bg-blue-500" />
+              <span className="inline-block h-4 w-4 rounded-full bg-amber-500" />
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              <span className="inline-block h-2 w-2 rounded-full bg-violet-500" />
+            </div>
+            <div className="text-xs text-muted">
+              291 nodes · 2,853 edges
+            </div>
+            <div className="text-xs text-muted">
+              Explore connections across 18 seasons
+            </div>
+          </div>
+        </BentoCard>
+
         {/* Player Timeline */}
         <BentoCard
           title="Player Journey"
