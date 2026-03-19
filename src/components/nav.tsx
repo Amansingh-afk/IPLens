@@ -10,7 +10,6 @@ const links = [
   { href: "/sankey", label: "Transfers" },
   { href: "/head-to-head", label: "Rivals" },
   { href: "/compare", label: "Compare" },
-  { href: "/on-this-day", label: "On This Day" },
   { href: "/season", label: "Seasons" },
   // { href: "/draft", label: "Draft" },
 ];

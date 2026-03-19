@@ -6,6 +6,37 @@ import { SankeyDiagram } from "@/components/sankey-diagram";
 import { HeadToHead } from "@/components/head-to-head";
 import { PlayerTimeline } from "@/components/player-timeline";
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
+
+const OTD_TEAM_COLORS: Record<string, string> = {
+  "Mumbai Indians": "#004BA0",
+  "Chennai Super Kings": "#FDB913",
+  "Royal Challengers Bengaluru": "#EC1C24",
+  "Kolkata Knight Riders": "#3A225D",
+  "Delhi Capitals": "#004C93",
+  "Rajasthan Royals": "#EA1A85",
+  "Sunrisers Hyderabad": "#FF822A",
+  "Punjab Kings": "#DD1F2D",
+  "Gujarat Titans": "#1C1C2B",
+  "Lucknow Super Giants": "#A72056",
+  "Deccan Chargers": "#FF6600",
+  "Kochi Tuskers Kerala": "#8B4513",
+  "Pune Warriors": "#2E8B57",
+  "Gujarat Lions": "#FF6B35",
+  "Rising Pune Supergiant": "#2E8B57",
+};
+
+type OTDMatch = {
+  matchId: string;
+  season: string;
+  date: string;
+  team1: string;
+  team2: string;
+  winner: string;
+  winOutcome: string;
+  venue: string;
+  playerOfMatch: string;
+};
 
 const FEATURED_PLAYERS = [
   { name: "V Kohli", color: "#EC1C24" },
@@ -35,7 +66,47 @@ export default function Home() {
   const [playerFading, setPlayerFading] = useState(false);
   const [rivalryFading, setRivalryFading] = useState(false);
 
+  const [otdMatches, setOtdMatches] = useState<OTDMatch[]>([]);
+  const [otdLabel, setOtdLabel] = useState("");
+
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    fetch("/data/on-this-day.json")
+      .then((r) => r.json())
+      .then((data: Record<string, OTDMatch[]>) => {
+        const now = new Date();
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const dd = String(now.getDate()).padStart(2, "0");
+        const key = `${mm}-${dd}`;
+        const monthNames = [
+          "January","February","March","April","May","June",
+          "July","August","September","October","November","December",
+        ];
+
+        if (data[key]?.length) {
+          setOtdMatches(data[key]);
+          setOtdLabel(`${monthNames[now.getMonth()]} ${now.getDate()}`);
+        } else {
+          const keys = Object.keys(data).filter((k) => data[k]?.length).sort();
+          const ord = (now.getMonth() + 1) * 31 + now.getDate();
+          let best = keys[0];
+          let bestDist = Infinity;
+          for (const k of keys) {
+            const [km, kd] = k.split("-").map(Number);
+            const kOrd = km * 31 + kd;
+            let dist = Math.abs(kOrd - ord);
+            if (dist > 183) dist = 365 - dist;
+            if (dist < bestDist) { bestDist = dist; best = k; }
+          }
+          if (best) {
+            setOtdMatches(data[best] ?? []);
+            const [bm, bd] = best.split("-").map(Number);
+            setOtdLabel(`${monthNames[bm - 1]} ${bd}`);
+          }
+        }
+      });
+  }, []);
 
   const cyclePlayer = useCallback(() => {
     setPlayerFading(true);
@@ -89,6 +160,55 @@ export default function Home() {
         >
           {mounted && <BarRace mini maxBars={10} />}
         </BentoCard>
+
+        {/* On This Day */}
+        {otdMatches.length > 0 && (
+          <div className="md:col-span-2 rounded-xl border border-card-border bg-card p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">On This Day — {otdLabel}</h2>
+                <p className="text-xs text-muted">{otdMatches.length} match{otdMatches.length > 1 ? "es" : ""} played across IPL history</p>
+              </div>
+              <Link
+                href="/on-this-day"
+                className="rounded-md border border-card-border px-3 py-1.5 text-xs text-muted transition-colors hover:border-blue-500 hover:text-foreground"
+              >
+                See all dates →
+              </Link>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {otdMatches.slice(0, 6).map((match) => {
+                const winColor = OTD_TEAM_COLORS[match.winner] ?? "#71717a";
+                return (
+                  <div
+                    key={match.matchId}
+                    className="rounded-lg border border-card-border bg-background p-3 transition-colors hover:border-white/20"
+                  >
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium">{match.season}</span>
+                    </div>
+                    <div className="mb-1 text-sm">
+                      <span style={{ color: OTD_TEAM_COLORS[match.team1] ?? "#71717a" }}>{match.team1}</span>
+                      <span className="text-muted"> vs </span>
+                      <span style={{ color: OTD_TEAM_COLORS[match.team2] ?? "#71717a" }}>{match.team2}</span>
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-semibold" style={{ color: winColor }}>{match.winner}</span>
+                      <span className="text-muted"> won by {match.winOutcome}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {otdMatches.length > 6 && (
+              <div className="mt-3 text-center">
+                <Link href="/on-this-day" className="text-xs text-muted hover:text-foreground">
+                  +{otdMatches.length - 6} more matches →
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Sankey */}
         <BentoCard
