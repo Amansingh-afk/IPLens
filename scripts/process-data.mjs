@@ -417,4 +417,197 @@ const graph = { nodes: kgNodes, edges: kgEdges };
 writeFileSync("public/data/graph.json", JSON.stringify(graph));
 console.log(`graph.json: ${kgNodes.length} nodes, ${kgEdges.length} edges`);
 
+// ── On This Day ──
+const matchIdToFirstRow = new Map();
+for (const d of data) {
+  if (!matchIdToFirstRow.has(d.match_id)) {
+    matchIdToFirstRow.set(d.match_id, d);
+  }
+}
+
+const onThisDay = {};
+for (const [matchId, m] of matchWinners) {
+  const row = matchIdToFirstRow.get(matchId);
+  if (!row) continue;
+  const month = String(row.month || "").padStart(2, "0");
+  const day = String(row.day || "").padStart(2, "0");
+  if (!month || !day || month === "00" || day === "00") continue;
+  const key = `${month}-${day}`;
+  const teams = [...m.teams].sort();
+  if (teams.length !== 2) continue;
+  const entry = {
+    matchId,
+    season: m.season,
+    date: row.date || "",
+    team1: canon(teams[0]),
+    team2: canon(teams[1]),
+    winner: m.winner,
+    winOutcome: row.win_outcome || "",
+    venue: row.venue || "",
+    playerOfMatch: row.player_of_match || "",
+  };
+  if (!onThisDay[key]) onThisDay[key] = [];
+  onThisDay[key].push(entry);
+}
+
+// Deduplicate by matchId (keep first occurrence per key)
+for (const key of Object.keys(onThisDay)) {
+  const seen = new Set();
+  onThisDay[key] = onThisDay[key].filter((e) => {
+    if (seen.has(e.matchId)) return false;
+    seen.add(e.matchId);
+    return true;
+  });
+  onThisDay[key].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+writeFileSync("public/data/on-this-day.json", JSON.stringify(onThisDay));
+const onThisDayCount = Object.values(onThisDay).reduce((s, arr) => s + arr.length, 0);
+console.log(`on-this-day.json: ${Object.keys(onThisDay).length} dates, ${onThisDayCount} matches`);
+
+// ── Season Recaps ──
+const seasonRecaps = {};
+
+// Champion: winner of match with latest date per season
+const seasonLatestMatch = new Map();
+for (const [matchId, m] of matchWinners) {
+  const row = matchIdToFirstRow.get(matchId);
+  if (!row || !row.date) continue;
+  const season = m.season;
+  const existing = seasonLatestMatch.get(season);
+  if (!existing || row.date > existing.date) {
+    seasonLatestMatch.set(season, { matchId, date: row.date, winner: m.winner });
+  }
+}
+
+// Total matches per season
+const seasonMatchCount = new Map();
+for (const [, m] of matchWinners) {
+  seasonMatchCount.set(m.season, (seasonMatchCount.get(m.season) || 0) + 1);
+}
+
+// Top scorer and top wicket taker per season (from playerMap)
+const seasonTopScorer = new Map();
+const seasonTopWicketTaker = new Map();
+for (const [, v] of playerMap) {
+  const season = v.season;
+  if (!seasonTopScorer.has(season) || v.runs > seasonTopScorer.get(season).runs) {
+    seasonTopScorer.set(season, { name: v.name, runs: v.runs });
+  }
+  if (!seasonTopWicketTaker.has(season) || v.wickets > seasonTopWicketTaker.get(season).wickets) {
+    seasonTopWicketTaker.set(season, { name: v.name, wickets: v.wickets });
+  }
+}
+
+// Most sixes and fours per batter per season
+const batterSixes = new Map();
+const batterFours = new Map();
+for (const d of data) {
+  const key = `${d.batter}|${d._season}`;
+  if (d.runs_batter === "6") {
+    batterSixes.set(key, (batterSixes.get(key) || 0) + 1);
+  }
+  if (d.runs_batter === "4") {
+    batterFours.set(key, (batterFours.get(key) || 0) + 1);
+  }
+}
+
+const seasonMostSixes = new Map();
+const seasonMostFours = new Map();
+for (const [key, count] of batterSixes) {
+  const [, season] = key.split("|");
+  const name = key.split("|")[0];
+  if (!seasonMostSixes.has(season) || count > seasonMostSixes.get(season).sixes) {
+    seasonMostSixes.set(season, { name, sixes: count });
+  }
+}
+for (const [key, count] of batterFours) {
+  const [, season] = key.split("|");
+  const name = key.split("|")[0];
+  if (!seasonMostFours.has(season) || count > seasonMostFours.get(season).fours) {
+    seasonMostFours.set(season, { name, fours: count });
+  }
+}
+
+// Highest score per batter per match (group by matchId+batter, sum runs_batter)
+const matchBatterRuns = new Map();
+for (const d of data) {
+  const key = `${d.match_id}|${d.batter}`;
+  const runs = parseInt(d.runs_batter) || 0;
+  if (!matchBatterRuns.has(key)) {
+    matchBatterRuns.set(key, {
+      batter: d.batter,
+      runs: 0,
+      team: canon(d.batting_team),
+      against: canon(d.bowling_team),
+      season: d._season,
+    });
+  }
+  matchBatterRuns.get(key).runs += runs;
+}
+
+const seasonHighestScore = new Map();
+for (const [, v] of matchBatterRuns) {
+  const season = v.season;
+  const existing = seasonHighestScore.get(season);
+  if (!existing || v.runs > existing.runs) {
+    seasonHighestScore.set(season, {
+      name: v.batter,
+      runs: v.runs,
+      team: v.team,
+      against: v.against,
+      season,
+    });
+  }
+}
+
+// Teams per season
+const seasonTeams = new Map();
+for (const [, m] of matchWinners) {
+  for (const t of m.teams) {
+    const ct = canon(t);
+    if (!seasonTeams.has(m.season)) seasonTeams.set(m.season, new Set());
+    seasonTeams.get(m.season).add(ct);
+  }
+}
+
+for (const season of allSeasons) {
+  const latest = seasonLatestMatch.get(season);
+  const champion = latest ? latest.winner : "";
+  const totalMatches = seasonMatchCount.get(season) || 0;
+  const topScorer = seasonTopScorer.get(season) || { name: "", runs: 0 };
+  const topWicketTaker = seasonTopWicketTaker.get(season) || { name: "", wickets: 0 };
+  const mostSixes = seasonMostSixes.get(season) || { name: "", sixes: 0 };
+  const mostFours = seasonMostFours.get(season) || { name: "", fours: 0 };
+  const highestScore = seasonHighestScore.get(season) || {
+    name: "",
+    runs: 0,
+    team: "",
+    against: "",
+    season,
+  };
+  const teams = [...(seasonTeams.get(season) || [])].sort();
+
+  seasonRecaps[season] = {
+    season,
+    champion,
+    totalMatches,
+    topScorer: { name: topScorer.name, runs: topScorer.runs },
+    topWicketTaker: { name: topWicketTaker.name, wickets: topWicketTaker.wickets },
+    mostSixes: { name: mostSixes.name, sixes: mostSixes.sixes },
+    mostFours: { name: mostFours.name, fours: mostFours.fours },
+    highestScore: {
+      name: highestScore.name,
+      runs: highestScore.runs,
+      team: highestScore.team,
+      against: highestScore.against,
+      season,
+    },
+    teams,
+  };
+}
+
+writeFileSync("public/data/season-recaps.json", JSON.stringify(seasonRecaps));
+console.log(`season-recaps.json: ${Object.keys(seasonRecaps).length} seasons`);
+
 console.log("Done!");
