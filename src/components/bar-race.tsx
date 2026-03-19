@@ -48,6 +48,7 @@ export function BarRace({ mini = false, maxBars = 12 }: BarRaceProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [playing, setPlaying] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevRunsRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
     fetch("/data/seasons.json")
@@ -171,17 +172,33 @@ export function BarRace({ mini = false, maxBars = 12 }: BarRaceProps) {
       .attr("font-size", isMobile ? 9 : mini ? 10 : 13)
       .text((d) => isMobile && d.player.length > 10 ? d.player.slice(0, 9) + "…" : d.player);
 
-    merged
-      .select<SVGTextElement>(".bar-value")
-      .transition()
-      .duration(600)
-      .attr("x", (d) => margin.left + Math.max(0, x(d.runs)) + 6)
-      .attr("y", (d) => y(d.player)! + y.bandwidth() / 2)
-      .attr("dominant-baseline", "central")
-      .attr("fill", "#a1a1aa")
-      .attr("font-size", mini ? 9 : 12)
-      .attr("font-family", "var(--font-geist-mono)")
-      .text((d) => d.runs.toLocaleString());
+    const prevRuns = prevRunsRef.current;
+
+    merged.each(function (d) {
+      const group = d3.select(this);
+      const valueEl = group.select<SVGTextElement>(".bar-value");
+      const from = prevRuns[d.player] ?? 0;
+      const interp = d3.interpolateRound(from, d.runs);
+
+      valueEl
+        .transition()
+        .duration(600)
+        .attr("x", margin.left + Math.max(0, x(d.runs)) + 6)
+        .attr("y", y(d.player)! + y.bandwidth() / 2)
+        .attr("dominant-baseline", "central")
+        .attr("fill", "#a1a1aa")
+        .attr("font-size", mini ? 9 : 12)
+        .attr("font-family", "var(--font-geist-mono)")
+        .tween("text", function () {
+          return (t: number) => {
+            this.textContent = interp(t).toLocaleString();
+          };
+        });
+    });
+
+    prevRunsRef.current = Object.fromEntries(
+      entries.map((d) => [d.player, d.runs])
+    );
   }, [data, currentIdx, seasons, mini, maxBars]);
 
   if (!data) {
