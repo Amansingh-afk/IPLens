@@ -5,11 +5,66 @@ import { BarRace } from "@/components/bar-race";
 import { SankeyDiagram } from "@/components/sankey-diagram";
 import { HeadToHead } from "@/components/head-to-head";
 import { PlayerTimeline } from "@/components/player-timeline";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+
+const FEATURED_PLAYERS = [
+  { name: "V Kohli", color: "#EC1C24" },
+  { name: "MS Dhoni", color: "#FDB913" },
+  { name: "RG Sharma", color: "#004BA0" },
+  { name: "AB de Villiers", color: "#EC1C24" },
+  { name: "DA Warner", color: "#FF822A" },
+  { name: "CH Gayle", color: "#3A225D" },
+  { name: "S Dhawan", color: "#004C93" },
+  { name: "JJ Bumrah", color: "#004BA0" },
+  { name: "SP Narine", color: "#3A225D" },
+];
+
+const FEATURED_RIVALRIES = [
+  { team1: "Mumbai Indians", team2: "Chennai Super Kings", label: "MI vs CSK", color: "#FDB913" },
+  { team1: "Royal Challengers Bengaluru", team2: "Mumbai Indians", label: "RCB vs MI", color: "#EC1C24" },
+  { team1: "Kolkata Knight Riders", team2: "Chennai Super Kings", label: "KKR vs CSK", color: "#3A225D" },
+  { team1: "Delhi Capitals", team2: "Mumbai Indians", label: "DC vs MI", color: "#004C93" },
+  { team1: "Rajasthan Royals", team2: "Chennai Super Kings", label: "RR vs CSK", color: "#EA1A85" },
+  { team1: "Sunrisers Hyderabad", team2: "Royal Challengers Bengaluru", label: "SRH vs RCB", color: "#FF822A" },
+];
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
+  const [playerIdx, setPlayerIdx] = useState(0);
+  const [rivalryIdx, setRivalryIdx] = useState(0);
+  const [playerFading, setPlayerFading] = useState(false);
+  const [rivalryFading, setRivalryFading] = useState(false);
+
   useEffect(() => setMounted(true), []);
+
+  const cyclePlayer = useCallback(() => {
+    setPlayerFading(true);
+    setTimeout(() => {
+      setPlayerIdx((i) => (i + 1) % FEATURED_PLAYERS.length);
+      setPlayerFading(false);
+    }, 300);
+  }, []);
+
+  const cycleRivalry = useCallback(() => {
+    setRivalryFading(true);
+    setTimeout(() => {
+      setRivalryIdx((i) => (i + 1) % FEATURED_RIVALRIES.length);
+      setRivalryFading(false);
+    }, 300);
+  }, []);
+
+  useEffect(() => {
+    const playerTimer = setInterval(cyclePlayer, 5000);
+    return () => clearInterval(playerTimer);
+  }, [cyclePlayer]);
+
+  useEffect(() => {
+    const rivalryTimer = setInterval(cycleRivalry, 6000);
+    return () => clearInterval(rivalryTimer);
+  }, [cycleRivalry]);
+
+  const currentPlayer = FEATURED_PLAYERS[playerIdx];
+  const currentRivalry = FEATURED_RIVALRIES[rivalryIdx];
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
@@ -46,20 +101,25 @@ export default function Home() {
           {mounted && <SankeyDiagram mini />}
         </BentoCard>
 
-        {/* Head to Head */}
+        {/* Head to Head — rotating rivalries */}
         <BentoCard
-          title="MI vs CSK"
-          subtitle="The greatest IPL rivalry"
+          title={currentRivalry.label}
+          subtitle="Tap to see all rivalries"
           href="/head-to-head"
           className="min-h-[200px]"
-          glowColor="#FDB913"
+          glowColor={currentRivalry.color}
         >
           {mounted && (
-            <div className="flex h-full items-center justify-center">
+            <div
+              className={`flex h-full items-center justify-center transition-opacity duration-300 ${
+                rivalryFading ? "opacity-0" : "opacity-100"
+              }`}
+            >
               <HeadToHead
                 mini
-                presetTeam1="Mumbai Indians"
-                presetTeam2="Chennai Super Kings"
+                presetTeam1={currentRivalry.team1}
+                presetTeam2={currentRivalry.team2}
+                key={`${currentRivalry.team1}-${currentRivalry.team2}`}
               />
             </div>
           )}
@@ -89,15 +149,27 @@ export default function Home() {
           </div>
         </BentoCard>
 
-        {/* Player Timeline */}
+        {/* Player Timeline — rotating players */}
         <BentoCard
-          title="Player Journey"
-          subtitle="Career across seasons"
-          href="/player/V Kohli"
+          title={currentPlayer.name}
+          subtitle="Player journey across seasons"
+          href={`/player/${encodeURIComponent(currentPlayer.name)}`}
           className="min-h-[180px]"
-          glowColor="#EC1C24"
+          glowColor={currentPlayer.color}
         >
-          {mounted && <PlayerTimeline playerName="V Kohli" mini />}
+          {mounted && (
+            <div
+              className={`h-full transition-opacity duration-300 ${
+                playerFading ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              <PlayerTimeline
+                playerName={currentPlayer.name}
+                mini
+                key={currentPlayer.name}
+              />
+            </div>
+          )}
         </BentoCard>
 
         {/* Stats overview */}
