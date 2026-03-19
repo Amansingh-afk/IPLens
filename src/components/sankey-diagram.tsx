@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import * as d3 from "d3";
 import { sankey as d3Sankey, sankeyLinkHorizontal } from "d3-sankey";
 
@@ -48,6 +48,40 @@ function getColor(team: string) {
   return TEAM_COLORS[team] ?? "#666";
 }
 
+const SHORT_NAMES: Record<string, string> = {
+  "Mumbai Indians": "MI",
+  "Chennai Super Kings": "CSK",
+  "Royal Challengers Bengaluru": "RCB",
+  "Royal Challengers Bangalore": "RCB",
+  "Kolkata Knight Riders": "KKR",
+  "Delhi Capitals": "DC",
+  "Delhi Daredevils": "DD",
+  "Rajasthan Royals": "RR",
+  "Sunrisers Hyderabad": "SRH",
+  "Punjab Kings": "PBKS",
+  "Kings XI Punjab": "KXIP",
+  "Gujarat Titans": "GT",
+  "Lucknow Super Giants": "LSG",
+  "Deccan Chargers": "DCH",
+  "Kochi Tuskers Kerala": "KTK",
+  "Pune Warriors": "PW",
+  "Rising Pune Supergiant": "RPS",
+  "Rising Pune Supergiants": "RPS",
+  "Gujarat Lions": "GL",
+};
+
+function useIsMobile(breakpoint = 640) {
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    setMobile(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setMobile(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, [breakpoint]);
+  return mobile;
+}
+
 interface SankeyDiagramProps {
   mini?: boolean;
 }
@@ -55,15 +89,35 @@ interface SankeyDiagramProps {
 export function SankeyDiagram({ mini = false }: SankeyDiagramProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [raw, setRaw] = useState<SankeyRaw | null>(null);
   const [seasonRange, setSeasonRange] = useState<[number, number]>([2020, 2025]);
   const [filterTeam, setFilterTeam] = useState<string>("all");
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetch("/data/sankey.json")
       .then((r) => r.json())
       .then(setRaw);
+  }, []);
+
+  const showTooltip = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (x: number, y: number, d: any) => {
+      if (!tooltipRef.current) return;
+      const names = (d.players || []).slice(0, 10).join(", ");
+      const extra = d.value > 10 ? ` +${d.value - 10} more` : "";
+      tooltipRef.current.innerHTML = `<strong>${d.source?.name} → ${d.target?.name}</strong><br/>${d.value} players<br/><span class="text-xs text-zinc-400">${names}${extra}</span>`;
+      tooltipRef.current.style.display = "block";
+      tooltipRef.current.style.left = x + 10 + "px";
+      tooltipRef.current.style.top = y - 10 + "px";
+    },
+    []
+  );
+
+  const hideTooltip = useCallback(() => {
+    if (tooltipRef.current) tooltipRef.current.style.display = "none";
   }, []);
 
   useEffect(() => {
@@ -94,14 +148,12 @@ export function SankeyDiagram({ mini = false }: SankeyDiagramProps) {
       return;
     }
 
-    // Need at least some links with value > 0
     filteredLinks = filteredLinks.filter((l) => l.value > 0);
     if (filteredLinks.length === 0) {
       d3.select(svgRef.current).selectAll("*").remove();
       return;
     }
 
-    // Only keep nodes that are in links
     const usedNodeIds = new Set<string>();
     filteredLinks.forEach((l) => {
       usedNodeIds.add(l.source);
@@ -110,7 +162,13 @@ export function SankeyDiagram({ mini = false }: SankeyDiagramProps) {
     filteredNodes = filteredNodes.filter((n) => usedNodeIds.has(n.id));
 
     const container = containerRef.current;
-    const width = container.clientWidth;
+    const containerWidth = container.clientWidth;
+    const seasonSpan = sTo - sFrom + 1;
+
+    const MIN_WIDTH_PER_SEASON = isMobile ? 100 : 140;
+    const naturalWidth = Math.max(containerWidth, seasonSpan * MIN_WIDTH_PER_SEASON);
+    const width = mini ? containerWidth : naturalWidth;
+
     const height = mini ? 250 : Math.max(500, filteredNodes.length * 12);
 
     const svg = d3.select(svgRef.current);
@@ -126,11 +184,14 @@ export function SankeyDiagram({ mini = false }: SankeyDiagramProps) {
       players: l.players,
     }));
 
+    const nodeWidth = mini ? 10 : isMobile ? 12 : 16;
+    const nodePadding = mini ? 4 : isMobile ? 6 : 8;
+
     const indexedNodes = sankeyNodes.map((d, i) => ({ ...d, index: i }));
     const sankeyGen = d3Sankey<{ index: number; name: string; season: string }, { source: number; target: number; value: number; players: string[] }>()
       .nodeId((d) => d.index)
-      .nodeWidth(mini ? 10 : 16)
-      .nodePadding(mini ? 4 : 8)
+      .nodeWidth(nodeWidth)
+      .nodePadding(nodePadding)
       .extent([
         [1, 1],
         [width - 1, height - 1],
@@ -141,7 +202,6 @@ export function SankeyDiagram({ mini = false }: SankeyDiagramProps) {
       links: sankeyLinks.map((d) => ({ ...d })),
     });
 
-    // Links
     const g = svg.append("g");
     const linkPath = sankeyLinkHorizontal();
 
@@ -156,21 +216,30 @@ export function SankeyDiagram({ mini = false }: SankeyDiagramProps) {
       .attr("stroke-opacity", 0.35)
       .attr("stroke-width", (d: any) => Math.max(1, d.width || 1));
 
-    linkSel.on("mouseenter", function (event: MouseEvent, d: any) {
-      d3.select(this).attr("stroke-opacity", 0.7);
-      if (tooltipRef.current) {
-        const names = (d.players || []).slice(0, 10).join(", ");
-        const extra = d.value > 10 ? ` +${d.value - 10} more` : "";
-        tooltipRef.current.innerHTML = `<strong>${d.source?.name} → ${d.target?.name}</strong><br/>${d.value} players<br/><span class="text-xs text-zinc-400">${names}${extra}</span>`;
-        tooltipRef.current.style.display = "block";
-        tooltipRef.current.style.left = event.offsetX + 10 + "px";
-        tooltipRef.current.style.top = event.offsetY - 10 + "px";
-      }
-    })
-    .on("mouseleave", function () {
-      d3.select(this).attr("stroke-opacity", 0.35);
-      if (tooltipRef.current) tooltipRef.current.style.display = "none";
-    });
+    linkSel
+      .on("mouseenter", function (event: MouseEvent, d: any) {
+        d3.select(this).attr("stroke-opacity", 0.7);
+        showTooltip(event.offsetX, event.offsetY, d);
+      })
+      .on("mouseleave", function () {
+        d3.select(this).attr("stroke-opacity", 0.35);
+        hideTooltip();
+      });
+
+    linkSel
+      .on("touchstart", function (event: TouchEvent, d: any) {
+        event.preventDefault();
+        g.selectAll(".sankey-link").attr("stroke-opacity", 0.35);
+        d3.select(this).attr("stroke-opacity", 0.7);
+        const touch = event.touches[0];
+        const rect = svgRef.current!.getBoundingClientRect();
+        const scrollLeft = scrollRef.current?.scrollLeft ?? 0;
+        showTooltip(
+          touch.clientX - rect.left + scrollLeft,
+          touch.clientY - rect.top,
+          d
+        );
+      }, { passive: false });
 
     // Nodes
     g.selectAll(".sankey-node")
@@ -185,6 +254,7 @@ export function SankeyDiagram({ mini = false }: SankeyDiagramProps) {
       .attr("rx", 2);
 
     if (!mini) {
+      const labelFontSize = isMobile ? 9 : 11;
       g.selectAll(".sankey-label")
         .data(graph.nodes)
         .join("text")
@@ -194,11 +264,27 @@ export function SankeyDiagram({ mini = false }: SankeyDiagramProps) {
         .attr("dy", "0.35em")
         .attr("text-anchor", (d: any) => (d.x0 < width / 2 ? "start" : "end"))
         .attr("fill", "#a1a1aa")
-        .attr("font-size", 11)
-        .text((d: any) => `${d.name} '${(d.season || "").slice(2)}`);
+        .attr("font-size", labelFontSize)
+        .text((d: any) => {
+          const abbr = SHORT_NAMES[d.name] || d.name;
+          const season = (d.season || "").slice(2);
+          return isMobile ? `${abbr} '${season}` : `${d.name} '${season}`;
+        });
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
-  }, [raw, seasonRange, filterTeam, mini]);
+  }, [raw, seasonRange, filterTeam, mini, isMobile, showTooltip, hideTooltip]);
+
+  // Dismiss tooltip on outside tap
+  useEffect(() => {
+    const handler = (e: TouchEvent) => {
+      const target = e.target as Element;
+      if (!target.closest(".sankey-link")) {
+        hideTooltip();
+      }
+    };
+    document.addEventListener("touchstart", handler);
+    return () => document.removeEventListener("touchstart", handler);
+  }, [hideTooltip]);
 
   const allTeams = raw
     ? [...new Set(raw.nodes.map((n) => n.name))].sort()
@@ -215,39 +301,41 @@ export function SankeyDiagram({ mini = false }: SankeyDiagramProps) {
   return (
     <div className="flex h-full flex-col" ref={containerRef}>
       {!mini && (
-        <div className="mb-4 flex flex-wrap items-center gap-4">
-          <label className="flex items-center gap-2 text-sm text-muted">
-            From
-            <input
-              type="number"
-              min={2008}
-              max={2025}
-              value={seasonRange[0]}
-              onChange={(e) =>
-                setSeasonRange([parseInt(e.target.value), seasonRange[1]])
-              }
-              className="w-20 rounded-md border border-card-border bg-card px-2 py-1 text-foreground"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-muted">
-            To
-            <input
-              type="number"
-              min={2008}
-              max={2025}
-              value={seasonRange[1]}
-              onChange={(e) =>
-                setSeasonRange([seasonRange[0], parseInt(e.target.value)])
-              }
-              className="w-20 rounded-md border border-card-border bg-card px-2 py-1 text-foreground"
-            />
-          </label>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-sm text-muted">
+              From
+              <input
+                type="number"
+                min={2008}
+                max={2025}
+                value={seasonRange[0]}
+                onChange={(e) =>
+                  setSeasonRange([parseInt(e.target.value), seasonRange[1]])
+                }
+                className="w-20 rounded-md border border-card-border bg-card px-2 py-1 text-foreground"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm text-muted">
+              To
+              <input
+                type="number"
+                min={2008}
+                max={2025}
+                value={seasonRange[1]}
+                onChange={(e) =>
+                  setSeasonRange([seasonRange[0], parseInt(e.target.value)])
+                }
+                className="w-20 rounded-md border border-card-border bg-card px-2 py-1 text-foreground"
+              />
+            </label>
+          </div>
           <label className="flex items-center gap-2 text-sm text-muted">
             Team
             <select
               value={filterTeam}
               onChange={(e) => setFilterTeam(e.target.value)}
-              className="rounded-md border border-card-border bg-card px-2 py-1 text-foreground"
+              className="flex-1 rounded-md border border-card-border bg-card px-2 py-1 text-foreground sm:flex-initial"
             >
               <option value="all">All Teams</option>
               {allTeams.map((t) => (
@@ -259,13 +347,21 @@ export function SankeyDiagram({ mini = false }: SankeyDiagramProps) {
           </label>
         </div>
       )}
-      <div className="relative flex-1 min-h-0">
-        <svg ref={svgRef} className="w-full" />
+      <div
+        ref={scrollRef}
+        className="relative flex-1 min-h-0 overflow-x-auto overscroll-x-contain -mx-1 px-1"
+      >
+        <svg ref={svgRef} className={mini ? "w-full" : ""} />
         <div
           ref={tooltipRef}
-          className="pointer-events-none absolute z-10 hidden rounded-lg border border-card-border bg-card px-3 py-2 text-sm shadow-xl"
+          className="pointer-events-none absolute z-10 hidden max-w-[260px] rounded-lg border border-card-border bg-card px-3 py-2 text-sm shadow-xl"
         />
       </div>
+      {!mini && isMobile && (
+        <p className="mt-2 text-center text-[10px] text-muted/60">
+          ← Scroll horizontally to explore →
+        </p>
+      )}
     </div>
   );
 }
