@@ -43,3 +43,4 @@ IPL.csv
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+docs/
