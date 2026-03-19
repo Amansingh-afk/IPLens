@@ -22,7 +22,7 @@ function getPlayers(): PlayerData[] {
 
 export async function generateStaticParams() {
   const players = getPlayers();
-  return players.map((p) => ({ name: encodeURIComponent(p.name) }));
+  return players.map((p) => ({ name: p.name }));
 }
 
 export async function generateMetadata({
