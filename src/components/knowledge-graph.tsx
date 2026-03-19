@@ -212,6 +212,7 @@ export function KnowledgeGraph() {
     edgeTypes: new Set(["played_for", "rivalry"]),
   });
   const [selectedNode, setSelectedNode] = useState<GNode | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetch("/data/graph.json")
@@ -494,8 +495,25 @@ export function KnowledgeGraph() {
 
   return (
     <div className="flex h-[calc(100vh-56px)] flex-col lg:flex-row">
+      {/* Mobile filter toggle */}
+      <button
+        onClick={() => setSidebarOpen((o) => !o)}
+        className="flex items-center justify-between border-b border-card-border bg-card px-4 py-2.5 text-sm font-medium text-foreground lg:hidden"
+      >
+        <span>Filters & Presets</span>
+        <svg
+          className={`h-4 w-4 text-muted transition-transform ${sidebarOpen ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
       {/* Sidebar */}
-      <div className="w-full shrink-0 space-y-4 overflow-y-auto border-b border-card-border bg-card p-4 lg:w-72 lg:border-b-0 lg:border-r">
+      <div className={`w-full shrink-0 space-y-4 overflow-y-auto border-b border-card-border bg-card p-4 lg:block lg:w-72 lg:border-b-0 lg:border-r ${sidebarOpen ? "block max-h-[50vh]" : "hidden"}`}>
         {/* Search */}
         <input
           type="text"
@@ -697,7 +715,7 @@ export function KnowledgeGraph() {
       </div>
 
       {/* Graph area */}
-      <div className="relative flex-1 min-h-0" ref={containerRef}>
+      <div className="relative flex-1 min-h-[400px]" ref={containerRef}>
         <svg ref={svgRef} className="h-full w-full" />
         <div
           ref={tooltipRef}
