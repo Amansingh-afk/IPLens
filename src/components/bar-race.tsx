@@ -93,7 +93,13 @@ export function BarRace({ mini = false, maxBars = 12 }: BarRaceProps) {
     const svg = d3.select(svgRef.current);
     svg.attr("width", width).attr("height", height);
 
-    const margin = { top: mini ? 24 : 40, right: mini ? 50 : 80, bottom: 0, left: mini ? 100 : 140 };
+    const isMobile = width < 500;
+    const margin = {
+      top: mini ? 24 : 40,
+      right: isMobile ? 30 : mini ? 50 : 80,
+      bottom: 0,
+      left: isMobile ? 60 : mini ? 100 : 140,
+    };
     const innerW = width - margin.left - margin.right;
 
     const maxRuns = d3.max(entries, (d) => d.runs) || 1;
@@ -115,7 +121,7 @@ export function BarRace({ mini = false, maxBars = 12 }: BarRaceProps) {
       .attr("y", height - (mini ? 10 : 16))
       .attr("text-anchor", "end")
       .attr("fill", "#ffffff12")
-      .attr("font-size", mini ? 48 : 72)
+      .attr("font-size", isMobile ? 36 : mini ? 48 : 72)
       .attr("font-weight", "bold")
       .text(season);
 
@@ -162,8 +168,8 @@ export function BarRace({ mini = false, maxBars = 12 }: BarRaceProps) {
       .attr("text-anchor", "end")
       .attr("dominant-baseline", "central")
       .attr("fill", "#e4e4e7")
-      .attr("font-size", mini ? 10 : 13)
-      .text((d) => d.player);
+      .attr("font-size", isMobile ? 9 : mini ? 10 : 13)
+      .text((d) => isMobile && d.player.length > 10 ? d.player.slice(0, 9) + "…" : d.player);
 
     merged
       .select<SVGTextElement>(".bar-value")
