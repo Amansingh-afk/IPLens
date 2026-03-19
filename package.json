@@ -1,20 +1,26 @@
 {
-  "name": "app-scaffold",
+  "name": "iplens",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build:data": "node scripts/process-data.mjs",
+    "build": "node scripts/process-data.mjs && next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "csv-parse": "^6.2.0",
+    "d3": "^7.9.0",
+    "d3-sankey": "^0.12.3",
     "next": "16.2.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/d3": "^7.4.3",
+    "@types/d3-sankey": "^0.12.5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

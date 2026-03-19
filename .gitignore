@@ -36,6 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# data files (large, generated)
+IPL.csv
+/public/data/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
