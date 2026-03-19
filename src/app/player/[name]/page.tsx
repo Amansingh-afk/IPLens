@@ -55,7 +55,7 @@ export async function generateMetadata({
     title: `${player.name} — IPL Career Stats & Timeline`,
     description: `${player.name} IPL career: ${totalMatches} matches across ${player.seasons.length} seasons${statsStr ? ` — ${statsStr}` : ""}. ${lastTeam ? `Last played for ${lastTeam}.` : ""} Full season-by-season timeline.`,
     alternates: {
-      canonical: `https://iplens.vercel.app/player/${encodeURIComponent(player.name)}`,
+      canonical: `https://iplens.in/player/${encodeURIComponent(player.name)}`,
     },
     openGraph: {
       title: `${player.name} — IPL Career Timeline`,
@@ -82,7 +82,7 @@ export default async function PlayerPage({
         "@type": "Person",
         name: player.name,
         description: `IPL cricket player — ${player.seasons.length} seasons, ${player.seasons.reduce((s, x) => s + x.matches, 0)} matches`,
-        url: `https://iplens.vercel.app/player/${encodeURIComponent(player.name)}`,
+        url: `https://iplens.in/player/${encodeURIComponent(player.name)}`,
         sport: "Cricket",
         affiliation: player.seasons[player.seasons.length - 1]?.team,
       }

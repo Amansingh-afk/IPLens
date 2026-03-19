@@ -38,7 +38,7 @@ export default function EmbedBuilder() {
   const [copied, setCopied] = useState(false);
 
   const origin =
-    typeof window !== "undefined" ? window.location.origin : "https://iplens.vercel.app";
+    typeof window !== "undefined" ? window.location.origin : "https://iplens.in";
 
   const iframeCode = `<iframe src="${origin}/${selected.id}" width="${selected.width}" height="${selected.height}" frameborder="0" style="border-radius:12px;border:1px solid #1a1a2e;" allowfullscreen></iframe>`;
 

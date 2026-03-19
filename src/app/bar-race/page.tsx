@@ -4,7 +4,7 @@ export const metadata = {
   title: "All-Time Top IPL Run Scorers — Bar Race",
   description:
     "Watch the animated bar race of all-time top IPL run scorers racing across 18 seasons. See how Kohli, Dhawan, Warner, and others climbed the leaderboard.",
-  alternates: { canonical: "https://iplens.vercel.app/bar-race" },
+  alternates: { canonical: "https://iplens.in/bar-race" },
 };
 
 export default function BarRacePage() {

@@ -56,7 +56,7 @@ export async function generateMetadata({
   return {
     title: `IPL ${year} Season Recap`,
     description: `IPL ${year} season stats — won by ${champion}. Top scorer: ${recap?.topScorer?.name ?? "N/A"} (${recap?.topScorer?.runs ?? 0} runs). ${recap?.totalMatches ?? 0} matches played across ${recap?.teams?.length ?? 0} teams.`,
-    alternates: { canonical: `https://iplens.vercel.app/season/${year}` },
+    alternates: { canonical: `https://iplens.in/season/${year}` },
   };
 }
 
@@ -75,7 +75,7 @@ export default async function SeasonPage({
     "@context": "https://schema.org",
     "@type": "SportsEvent",
     name: `Indian Premier League ${year}`,
-    url: `https://iplens.vercel.app/season/${year}`,
+    url: `https://iplens.in/season/${year}`,
     sport: "Cricket",
     description: `IPL ${year} season — won by ${recap.champion}. ${recap.totalMatches} matches, ${recap.teams.length} teams.`,
     location: { "@type": "Place", name: "India" },

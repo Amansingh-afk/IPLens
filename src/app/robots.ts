@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/embed"],
       },
     ],
-    sitemap: "https://iplens.vercel.app/sitemap.xml",
+    sitemap: "https://iplens.in/sitemap.xml",
   };
 }

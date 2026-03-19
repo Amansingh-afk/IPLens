@@ -4,7 +4,7 @@ export const metadata = {
   title: "IPL Head to Head — Team Rivalries",
   description:
     "Compare any two IPL teams head-to-head. See win records, close matches, and rivalry stats from MI vs CSK to RCB vs SRH.",
-  alternates: { canonical: "https://iplens.vercel.app/head-to-head" },
+  alternates: { canonical: "https://iplens.in/head-to-head" },
 };
 
 export default function HeadToHeadPage() {

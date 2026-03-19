@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "IPL Team Draft Quiz",
   description:
     "Take the quiz to find out which IPL franchise you belong to. Answer 6 questions and get drafted by your perfect IPL team.",
-  alternates: { canonical: "https://iplens.vercel.app/draft" },
+  alternates: { canonical: "https://iplens.in/draft" },
   openGraph: {
     title: "Which IPL Team Drafts You?",
     description: "Take the quiz and find your perfect IPL franchise.",

@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { readFileSync } from "fs";
 import path from "path";
 
-const SITE_URL = "https://iplens.vercel.app";
+const SITE_URL = "https://iplens.in";
 
 interface PlayerData {
   name: string;

@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Embed IPLens Charts",
   description:
     "Add interactive IPL visualizations to your blog or website. Copy embed codes for bar races, Sankey diagrams, and head-to-head charts.",
-  alternates: { canonical: "https://iplens.vercel.app/embed" },
+  alternates: { canonical: "https://iplens.in/embed" },
   robots: { index: false },
 };
 
