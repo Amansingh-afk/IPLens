@@ -1,8 +1,10 @@
 import { BarRace } from "@/components/bar-race";
 
 export const metadata = {
-  title: "Bar Race — IPLens",
-  description: "Animated bar race of all-time top IPL run scorers across seasons",
+  title: "All-Time Top IPL Run Scorers — Bar Race",
+  description:
+    "Watch the animated bar race of all-time top IPL run scorers racing across 18 seasons. See how Kohli, Dhawan, Warner, and others climbed the leaderboard.",
+  alternates: { canonical: "https://iplens.vercel.app/bar-race" },
 };
 
 export default function BarRacePage() {

@@ -1,8 +1,10 @@
 import { KnowledgeGraph } from "@/components/knowledge-graph";
 
 export const metadata = {
-  title: "Knowledge Graph — IPLens",
-  description: "Interactive knowledge graph of IPL players, teams, seasons, and venues",
+  title: "IPL Knowledge Graph",
+  description:
+    "Interactive knowledge graph connecting 291 IPL nodes — players, teams, seasons, and venues. Explore how everything in IPL history is connected.",
+  alternates: { canonical: "https://iplens.vercel.app/graph" },
 };
 
 export default function GraphPage() {

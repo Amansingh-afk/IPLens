@@ -1,8 +1,10 @@
 import { HeadToHead } from "@/components/head-to-head";
 
 export const metadata = {
-  title: "Head to Head — IPLens",
-  description: "IPL team rivalry stats — pick any two teams and see their history",
+  title: "IPL Head to Head — Team Rivalries",
+  description:
+    "Compare any two IPL teams head-to-head. See win records, close matches, and rivalry stats from MI vs CSK to RCB vs SRH.",
+  alternates: { canonical: "https://iplens.vercel.app/head-to-head" },
 };
 
 export default function HeadToHeadPage() {

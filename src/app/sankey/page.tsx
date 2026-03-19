@@ -1,8 +1,10 @@
 import { SankeyDiagram } from "@/components/sankey-diagram";
 
 export const metadata = {
-  title: "Player Transfers — IPLens",
-  description: "Sankey diagram showing player movement between IPL franchises",
+  title: "IPL Player Transfers",
+  description:
+    "Sankey diagram visualizing player movement between IPL franchises across seasons. See which teams gained and lost the most players.",
+  alternates: { canonical: "https://iplens.vercel.app/sankey" },
 };
 
 export default function SankeyPage() {

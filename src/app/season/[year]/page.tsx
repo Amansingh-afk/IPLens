@@ -50,9 +50,13 @@ export async function generateMetadata({
   params: Promise<{ year: string }>;
 }) {
   const { year } = await params;
+  const data = getData();
+  const recap = data[year];
+  const champion = recap?.champion ?? "Unknown";
   return {
-    title: `IPL ${year} Season Recap — IPLens`,
-    description: `Complete stats and recap of IPL season ${year}`,
+    title: `IPL ${year} Season Recap`,
+    description: `IPL ${year} season stats — won by ${champion}. Top scorer: ${recap?.topScorer?.name ?? "N/A"} (${recap?.topScorer?.runs ?? 0} runs). ${recap?.totalMatches ?? 0} matches played across ${recap?.teams?.length ?? 0} teams.`,
+    alternates: { canonical: `https://iplens.vercel.app/season/${year}` },
   };
 }
 
@@ -67,6 +71,20 @@ export default async function SeasonPage({
 
   if (!recap) notFound();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SportsEvent",
+    name: `Indian Premier League ${year}`,
+    url: `https://iplens.vercel.app/season/${year}`,
+    sport: "Cricket",
+    description: `IPL ${year} season — won by ${recap.champion}. ${recap.totalMatches} matches, ${recap.teams.length} teams.`,
+    location: { "@type": "Place", name: "India" },
+    competitor: recap.teams.map((t: string) => ({
+      "@type": "SportsTeam",
+      name: t,
+    })),
+  };
+
   const years = Object.keys(data).sort();
   const idx = years.indexOf(year);
   const prevYear = idx > 0 ? years[idx - 1] : null;
@@ -74,6 +92,11 @@ export default async function SeasonPage({
   const champColor = TEAM_COLORS[recap.champion] || "#666";
 
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
     <div className="mx-auto max-w-4xl px-6 py-8">
       <div className="mb-8 flex items-center justify-between">
         {prevYear ? (
@@ -163,6 +186,7 @@ export default async function SeasonPage({
         </div>
       </div>
     </div>
+    </>
   );
 }
 
