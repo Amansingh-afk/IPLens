@@ -1,22 +1,10 @@
 import type { MetadataRoute } from "next";
-import { readFileSync } from "fs";
-import path from "path";
+import players from "../../public/data/players.json";
+import recaps from "../../public/data/season-recaps.json";
 
 const SITE_URL = "https://iplens.in";
 
-interface PlayerData {
-  name: string;
-  seasons: { season: string }[];
-}
-
 export default function sitemap(): MetadataRoute.Sitemap {
-  const playersPath = path.join(process.cwd(), "public/data/players.json");
-  const players: PlayerData[] = JSON.parse(readFileSync(playersPath, "utf-8"));
-
-  const recapsPath = path.join(process.cwd(), "public/data/season-recaps.json");
-  const recaps: Record<string, unknown> = JSON.parse(
-    readFileSync(recapsPath, "utf-8")
-  );
   const seasons = Object.keys(recaps);
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -49,11 +37,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  const playerRoutes: MetadataRoute.Sitemap = players.map((p) => ({
-    url: `${SITE_URL}/player/${encodeURIComponent(p.name)}`,
-    changeFrequency: "yearly" as const,
-    priority: 0.5,
-  }));
+  const playerRoutes: MetadataRoute.Sitemap = players.map(
+    (p: { name: string }) => ({
+      url: `${SITE_URL}/player/${encodeURIComponent(p.name)}`,
+      changeFrequency: "yearly" as const,
+      priority: 0.5,
+    })
+  );
 
   return [...staticRoutes, ...seasonRoutes, ...playerRoutes];
 }
