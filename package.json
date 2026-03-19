@@ -11,6 +11,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "csv-parse": "^6.2.0",
     "d3": "^7.9.0",
     "d3-sankey": "^0.12.3",
