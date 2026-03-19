@@ -134,17 +134,16 @@ export default function Home() {
           glowColor="#8b5cf6"
         >
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-            <div className="flex items-center gap-1">
-              <span className="inline-block h-3 w-3 rounded-full bg-blue-500" />
-              <span className="inline-block h-4 w-4 rounded-full bg-amber-500" />
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
-              <span className="inline-block h-2 w-2 rounded-full bg-violet-500" />
+            <div className="relative h-16 w-32">
+              {/* Orbiting dots animation */}
+              <span className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500/80" />
+              <span className="absolute h-3 w-3 rounded-full bg-blue-500 animate-[orbit_4s_linear_infinite]" style={{ offsetPath: "path('M 64,32 m -28,0 a 28,28 0 1,1 56,0 a 28,28 0 1,1 -56,0')", offsetDistance: "0%" }} />
+              <span className="absolute h-2.5 w-2.5 rounded-full bg-emerald-500 animate-[orbit_5s_linear_infinite]" style={{ offsetPath: "path('M 64,32 m -20,0 a 20,20 0 1,1 40,0 a 20,20 0 1,1 -40,0')", offsetDistance: "33%" }} />
+              <span className="absolute h-2 w-2 rounded-full bg-violet-500 animate-[orbit_3s_linear_infinite]" style={{ offsetPath: "path('M 64,32 m -36,0 a 36,24 0 1,1 72,0 a 36,24 0 1,1 -72,0')", offsetDistance: "66%" }} />
+              <span className="absolute h-2 w-2 rounded-full bg-red-500 animate-[orbit_6s_linear_infinite]" style={{ offsetPath: "path('M 64,32 m -32,0 a 32,18 0 1,1 64,0 a 32,18 0 1,1 -64,0')", offsetDistance: "50%" }} />
             </div>
             <div className="text-xs text-muted">
               291 nodes · 2,853 edges
-            </div>
-            <div className="text-xs text-muted">
-              Explore connections across 18 seasons
             </div>
           </div>
         </BentoCard>

@@ -106,6 +106,16 @@ export function HeadToHead({
   const [team1, setTeam1] = useState(presetTeam1 || "Mumbai Indians");
   const [team2, setTeam2] = useState(presetTeam2 || "Chennai Super Kings");
   const [allTeams, setAllTeams] = useState<string[]>(ACTIVE_TEAMS);
+  const [barAnimated, setBarAnimated] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setBarAnimated(true), 200);
+    return () => clearTimeout(t);
+  }, [team1, team2, matchups]);
+
+  useEffect(() => {
+    setBarAnimated(false);
+  }, [team1, team2]);
 
   useEffect(() => {
     fetch("/data/matchups.json")
@@ -155,27 +165,53 @@ export function HeadToHead({
     const data = [t1Wins, t2Wins, matchup.noResult];
     const colors = [getColor(team1), getColor(team2), "#333"];
 
-    g.selectAll("path")
+    const arcs = g.selectAll("path")
       .data(pie(data))
       .join("path")
-      .attr("d", arc as unknown as string)
       .attr("fill", (_d, i) => colors[i])
       .attr("stroke", "#06060a")
       .attr("stroke-width", 2);
 
-    g.append("text")
+    // Animate arcs sweeping in from 0
+    arcs.each(function (d) {
+      const el = d3.select(this);
+      const interpolate = d3.interpolate(
+        { startAngle: d.startAngle, endAngle: d.startAngle },
+        { startAngle: d.startAngle, endAngle: d.endAngle }
+      );
+      el.transition()
+        .duration(800)
+        .ease(d3.easeCubicOut)
+        .attrTween("d", () => (t) => arc(interpolate(t) as unknown as d3.DefaultArcObject) || "");
+    });
+
+    // Animate center text counting up
+    const centerText = g.append("text")
       .attr("text-anchor", "middle")
       .attr("dy", mini ? "-0.2em" : "-0.3em")
       .attr("fill", "#e4e4e7")
       .attr("font-size", mini ? 18 : 28)
-      .attr("font-weight", "bold")
-      .text(`${t1Wins}-${t2Wins}`);
+      .attr("font-weight", "bold");
+
+    centerText.transition()
+      .duration(800)
+      .tween("text", () => {
+        const i1 = d3.interpolateRound(0, t1Wins);
+        const i2 = d3.interpolateRound(0, t2Wins);
+        return (t) => { centerText.text(`${i1(t)}-${i2(t)}`); };
+      });
 
     g.append("text")
       .attr("text-anchor", "middle")
       .attr("dy", mini ? "1.2em" : "1.4em")
       .attr("fill", "#71717a")
       .attr("font-size", mini ? 9 : 12)
+      .attr("opacity", 0)
+      .transition()
+      .delay(400)
+      .duration(400)
+      .attr("opacity", 1)
+      .selection()
       .text(`${total} matches`);
   }, [matchup, team1, team2, t1Wins, t2Wins, mini, total]);
 
@@ -262,16 +298,16 @@ export function HeadToHead({
               </h4>
               <div className="flex h-4 overflow-hidden rounded-full">
                 <div
-                  className="transition-all duration-500"
+                  className="transition-all duration-[800ms] ease-out"
                   style={{
-                    width: `${total > 0 ? (t1Wins / total) * 100 : 50}%`,
+                    width: barAnimated && total > 0 ? `${(t1Wins / total) * 100}%` : "50%",
                     backgroundColor: getColor(team1),
                   }}
                 />
                 <div
-                  className="transition-all duration-500"
+                  className="transition-all duration-[800ms] ease-out"
                   style={{
-                    width: `${total > 0 ? (t2Wins / total) * 100 : 50}%`,
+                    width: barAnimated && total > 0 ? `${(t2Wins / total) * 100}%` : "50%",
                     backgroundColor: getColor(team2),
                   }}
                 />

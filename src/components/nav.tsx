@@ -12,7 +12,7 @@ const links = [
   { href: "/compare", label: "Compare" },
   { href: "/on-this-day", label: "On This Day" },
   { href: "/season", label: "Seasons" },
-  { href: "/draft", label: "Draft" },
+  // { href: "/draft", label: "Draft" },
 ];
 
 export function Nav() {

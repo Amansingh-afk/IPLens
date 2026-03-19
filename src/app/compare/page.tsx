@@ -76,16 +76,40 @@ function ComparisonBar({
   color2: string;
   format?: (n: number) => string;
 }) {
+  const [animated, setAnimated] = useState(false);
+  const [displayV1, setDisplayV1] = useState(0);
+  const [displayV2, setDisplayV2] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setAnimated(true), 100);
+    return () => clearTimeout(timer);
+  }, [value1, value2]);
+
+  // Count-up animation for numbers
+  useEffect(() => {
+    const duration = 800;
+    const start = performance.now();
+    function tick(now: number) {
+      const t = Math.min(1, (now - start) / duration);
+      const ease = 1 - Math.pow(1 - t, 3);
+      setDisplayV1(Math.round(value1 * ease));
+      setDisplayV2(Math.round(value2 * ease));
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }, [value1, value2]);
+
   const total = value1 + value2;
-  const pct1 = total > 0 ? (value1 / total) * 100 : 50;
-  const pct2 = total > 0 ? (value2 / total) * 100 : 50;
+  const pct1 = animated && total > 0 ? (value1 / total) * 100 : 50;
+  const pct2 = animated && total > 0 ? (value2 / total) * 100 : 50;
 
   return (
-    <div className="rounded-xl border border-card-border bg-card p-4">
+    <div ref={ref} className="rounded-xl border border-card-border bg-card p-4">
       <div className="mb-2 text-xs text-muted">{label}</div>
       <div className="mb-2 flex items-center justify-between gap-4">
         <span className="text-sm font-medium text-foreground">{name1}</span>
-        <span className="font-mono text-lg font-bold text-foreground">{format(value1)}</span>
+        <span className="font-mono text-lg font-bold text-foreground">{format(displayV1)}</span>
       </div>
       <div
         className="mb-2 h-3 w-full overflow-hidden rounded-full bg-card-border"
@@ -93,14 +117,14 @@ function ComparisonBar({
       >
         <div className="flex h-full w-full">
           <div
-            className="h-full transition-all duration-700 ease-out"
+            className="h-full transition-all duration-[800ms] ease-out"
             style={{
               width: `${pct1}%`,
               backgroundColor: color1,
             }}
           />
           <div
-            className="h-full transition-all duration-700 ease-out"
+            className="h-full transition-all duration-[800ms] ease-out"
             style={{
               width: `${pct2}%`,
               backgroundColor: color2,
@@ -110,7 +134,7 @@ function ComparisonBar({
       </div>
       <div className="flex items-center justify-between gap-4">
         <span className="text-sm font-medium text-foreground">{name2}</span>
-        <span className="font-mono text-lg font-bold text-foreground">{format(value2)}</span>
+        <span className="font-mono text-lg font-bold text-foreground">{format(displayV2)}</span>
       </div>
     </div>
   );
@@ -281,47 +305,50 @@ export default function ComparePage() {
       .filter((s) => runsBySeason2.has(s))
       .map((s) => ({ season: s, runs: runsBySeason2.get(s)! }));
 
-    if (data1.length > 0) {
-      g.append("path")
-        .datum(data1)
+    function animateLine(
+      data: { season: string; runs: number }[],
+      color: string,
+      cls: string,
+      delay: number,
+    ) {
+      if (data.length === 0) return;
+      const path = g.append("path")
+        .datum(data)
         .attr("d", line as unknown as string)
         .attr("fill", "none")
-        .attr("stroke", color1)
+        .attr("stroke", color)
         .attr("stroke-width", 2.5)
         .attr("stroke-linecap", "round")
         .attr("stroke-linejoin", "round");
-      g.selectAll(".dot1")
-        .data(data1)
+
+      const totalLen = (path.node() as SVGPathElement)?.getTotalLength() || 0;
+      path
+        .attr("stroke-dasharray", `${totalLen} ${totalLen}`)
+        .attr("stroke-dashoffset", totalLen)
+        .transition()
+        .delay(delay)
+        .duration(1000)
+        .ease(d3.easeCubicOut)
+        .attr("stroke-dashoffset", 0);
+
+      g.selectAll(`.${cls}`)
+        .data(data)
         .join("circle")
-        .attr("class", "dot1")
+        .attr("class", cls)
         .attr("cx", (d) => x(d.season)!)
         .attr("cy", (d) => y(d.runs))
-        .attr("r", 4)
-        .attr("fill", color1)
+        .attr("r", 0)
+        .attr("fill", color)
         .attr("stroke", "#06060a")
-        .attr("stroke-width", 2);
+        .attr("stroke-width", 2)
+        .transition()
+        .delay((_d, i) => delay + (i / data.length) * 1000)
+        .duration(300)
+        .attr("r", 4);
     }
 
-    if (data2.length > 0) {
-      g.append("path")
-        .datum(data2)
-        .attr("d", line as unknown as string)
-        .attr("fill", "none")
-        .attr("stroke", color2)
-        .attr("stroke-width", 2.5)
-        .attr("stroke-linecap", "round")
-        .attr("stroke-linejoin", "round");
-      g.selectAll(".dot2")
-        .data(data2)
-        .join("circle")
-        .attr("class", "dot2")
-        .attr("cx", (d) => x(d.season)!)
-        .attr("cy", (d) => y(d.runs))
-        .attr("r", 4)
-        .attr("fill", color2)
-        .attr("stroke", "#06060a")
-        .attr("stroke-width", 2);
-    }
+    animateLine(data1, color1, "dot1", 0);
+    animateLine(data2, color2, "dot2", 200);
 
     const xAxis = d3
       .axisBottom(x)
