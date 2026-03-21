@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import * as d3 from "d3";
+import { ShareModal, ShareButton } from "@/components/share-modal";
 
 interface PlayerSeason {
   season: string;
@@ -60,6 +61,7 @@ export function PlayerTimeline({
   const [players, setPlayers] = useState<Player[]>([]);
   const [search, setSearch] = useState(playerName || "");
   const [selected, setSelected] = useState<Player | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     fetch("/data/players.json")
@@ -214,6 +216,39 @@ export function PlayerTimeline({
   const totalMatches =
     selected?.seasons.reduce((s, x) => s + x.matches, 0) || 0;
 
+  const sharePlayerData =
+    selected && selected.seasons.length > 0
+      ? (() => {
+          const totalRuns = selected.seasons.reduce((s, x) => s + x.runs, 0);
+          const totalWickets = selected.seasons.reduce(
+            (s, x) => s + x.wickets,
+            0
+          );
+          const totalMatches = selected.seasons.reduce(
+            (s, x) => s + x.matches,
+            0
+          );
+          const bestSeason = selected.seasons.reduce(
+            (best, s) => (s.runs > best.runs ? s : best),
+            selected.seasons[0]
+          );
+          const teams = [...new Set(selected.seasons.map((s) => s.team))];
+          return {
+            name: selected.name,
+            runs: totalRuns,
+            wickets: totalWickets,
+            matches: totalMatches,
+            seasons: selected.seasons.length,
+            bestSeason: {
+              season: bestSeason.season,
+              runs: bestSeason.runs,
+              team: bestSeason.team,
+            },
+            teams,
+          };
+        })()
+      : undefined;
+
   if (mini && selected) {
     return (
       <div ref={containerRef} className="h-full">
@@ -260,6 +295,12 @@ export function PlayerTimeline({
 
       {selected && (
         <>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+              {selected.name}
+            </h2>
+            <ShareButton onClick={() => setShareOpen(true)} />
+          </div>
           <div className="mb-6 grid grid-cols-3 gap-4 md:grid-cols-4">
             <MiniStat label="Total Runs" value={totalRuns.toLocaleString()} />
             <MiniStat label="Wickets" value={totalWickets.toString()} />
@@ -319,6 +360,14 @@ export function PlayerTimeline({
           </div>
         </>
       )}
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        shareProps={{
+          type: "player",
+          playerData: sharePlayerData,
+        }}
+      />
     </div>
   );
 }

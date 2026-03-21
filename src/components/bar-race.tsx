@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import * as d3 from "d3";
+import { ShareModal, ShareButton } from "@/components/share-modal";
 
 interface SeasonEntry {
   player: string;
@@ -47,6 +48,7 @@ export function BarRace({ mini = false, maxBars = 12 }: BarRaceProps) {
   const [seasons, setSeasons] = useState<string[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [playing, setPlaying] = useState(true);
+  const [shareOpen, setShareOpen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevRunsRef = useRef<Record<string, number>>({});
 
@@ -209,6 +211,9 @@ export function BarRace({ mini = false, maxBars = 12 }: BarRaceProps) {
     );
   }
 
+  const currentSeason = seasons[currentIdx];
+  const currentEntries = currentSeason ? (data[currentSeason] ?? []) : [];
+
   return (
     <div className="flex h-full flex-col" ref={containerRef}>
       {!mini && (
@@ -233,9 +238,27 @@ export function BarRace({ mini = false, maxBars = 12 }: BarRaceProps) {
           <span className="font-mono text-lg font-bold text-foreground tabular-nums">
             {seasons[currentIdx]}
           </span>
+          <ShareButton onClick={() => setShareOpen(true)} />
         </div>
       )}
       <svg ref={svgRef} className="w-full" />
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        shareProps={{
+          type: "barRace",
+          barRaceData: currentSeason
+            ? {
+                season: currentSeason,
+                entries: currentEntries.slice(0, 6).map((e) => ({
+                  player: e.player,
+                  team: e.team,
+                  runs: e.runs,
+                })),
+              }
+            : undefined,
+        }}
+      />
     </div>
   );
 }

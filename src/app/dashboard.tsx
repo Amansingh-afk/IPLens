@@ -309,39 +309,6 @@ export default function Dashboard() {
           </div>
         </BentoCard>
 
-        {/* Fantasy Cricket CTA */}
-        <a
-          href="https://www.dream11.com"
-          target="_blank"
-          rel="noopener noreferrer sponsored"
-          className="group relative flex flex-col overflow-hidden rounded-2xl border border-card-border bg-card p-5 transition-all duration-300 hover:border-white/20 hover:scale-[1.01] min-h-[180px]"
-        >
-          <div
-            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-            style={{
-              background: "radial-gradient(600px circle at 50% 50%, #22c55e10, transparent 40%)",
-            }}
-          />
-          <div className="mb-3 flex items-baseline justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-foreground">Play Fantasy Cricket</h3>
-              <p className="mt-0.5 text-xs text-muted">Put your IPL knowledge to the test</p>
-            </div>
-            <span className="text-xs text-muted opacity-0 transition-opacity group-hover:opacity-100">
-              Play →
-            </span>
-          </div>
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">
-            <div className="flex items-center gap-2">
-              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-emerald-400">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-              </svg>
-            </div>
-            <p className="text-xs text-muted max-w-48">
-              Think you know who&apos;ll score big tonight? Back your stats with fantasy picks.
-            </p>
-          </div>
-        </a>
       </div>
 
       <footer className="mt-12 border-t border-card-border pt-8 pb-10">

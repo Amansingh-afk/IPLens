@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import * as d3 from "d3";
+import { ShareModal, ShareButton } from "@/components/share-modal";
 
 interface PlayerSeason {
   season: string;
@@ -221,6 +222,7 @@ export default function ComparePlayers() {
   const [search2, setSearch2] = useState("");
   const [player1, setPlayer1] = useState<Player | null>(null);
   const [player2, setPlayer2] = useState<Player | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     fetch("/data/players.json")
@@ -245,6 +247,15 @@ export default function ComparePlayers() {
   const stats2 = player2 ? computeStats(player2) : null;
   const color1 = stats1 ? getColor(stats1.lastTeam) : "#666";
   const color2 = stats2 ? getColor(stats2.lastTeam) : "#666";
+
+  const shareCompareData = player1 && player2 ? (() => {
+    const s1 = computeStats(player1);
+    const s2 = computeStats(player2);
+    return {
+      player1: { name: player1.name, runs: s1.totalRuns, wickets: s1.totalWickets, matches: s1.totalMatches, sr: s1.careerSR, team: s1.lastTeam },
+      player2: { name: player2.name, runs: s2.totalRuns, wickets: s2.totalWickets, matches: s2.totalMatches, sr: s2.careerSR, team: s2.lastTeam },
+    };
+  })() : undefined;
 
   // Career line chart: both players' runs per season
   useEffect(() => {
@@ -394,31 +405,40 @@ export default function ComparePlayers() {
         Pick any two IPL players and see a side-by-side comparison.
       </p>
 
-      <div className="mb-8 grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="mb-2 block text-xs font-medium text-muted">
-            Player 1
-          </label>
-          <PlayerSearch
-            value={search1}
-            onChange={setSearch1}
-            players={players}
-            selected={player1}
-            onSelect={setPlayer1}
-            placeholder="Search player..."
-          />
+      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:gap-6">
+        <div className="grid min-w-0 flex-1 gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-xs font-medium text-muted">
+              Player 1
+            </label>
+            <PlayerSearch
+              value={search1}
+              onChange={setSearch1}
+              players={players}
+              selected={player1}
+              onSelect={setPlayer1}
+              placeholder="Search player..."
+            />
+          </div>
+          <div>
+            <label className="mb-2 block text-xs font-medium text-muted">
+              Player 2
+            </label>
+            <PlayerSearch
+              value={search2}
+              onChange={setSearch2}
+              players={players}
+              selected={player2}
+              onSelect={setPlayer2}
+              placeholder="Search player..."
+            />
+          </div>
         </div>
-        <div>
-          <label className="mb-2 block text-xs font-medium text-muted">
-            Player 2
-          </label>
-          <PlayerSearch
-            value={search2}
-            onChange={setSearch2}
-            players={players}
-            selected={player2}
-            onSelect={setPlayer2}
-            placeholder="Search player..."
+        <div className="flex shrink-0 justify-end lg:justify-start">
+          <ShareButton
+            onClick={() => {
+              if (player1 && player2) setShareOpen(true);
+            }}
           />
         </div>
       </div>
@@ -582,6 +602,15 @@ export default function ComparePlayers() {
           </div>
         </>
       )}
+
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        shareProps={{
+          type: "compare",
+          compareData: shareCompareData,
+        }}
+      />
     </div>
   );
 }

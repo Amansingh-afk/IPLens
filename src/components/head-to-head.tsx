@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import Image from "next/image";
+import { ShareModal, ShareButton } from "@/components/share-modal";
+import type { ShareCardProps } from "@/components/share-card";
 
 interface Matchup {
   team1: string;
@@ -107,6 +109,7 @@ export function HeadToHead({
   const [team2, setTeam2] = useState(presetTeam2 || "Chennai Super Kings");
   const [allTeams, setAllTeams] = useState<string[]>(ACTIVE_TEAMS);
   const [barAnimated, setBarAnimated] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setBarAnimated(true), 200);
@@ -273,6 +276,7 @@ export function HeadToHead({
             ))}
           </select>
         </div>
+        <ShareButton onClick={() => setShareOpen(true)} />
       </div>
       {matchup ? (
         <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">
@@ -329,6 +333,22 @@ export function HeadToHead({
       ) : (
         <p className="text-muted">No matchup data for these teams.</p>
       )}
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        shareProps={{
+          type: "matchup",
+          matchupData: matchup
+            ? {
+                team1,
+                team2,
+                team1Wins: t1Wins,
+                team2Wins: t2Wins,
+                totalMatches: total,
+              }
+            : undefined,
+        }}
+      />
     </div>
   );
 }

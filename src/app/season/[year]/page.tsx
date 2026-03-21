@@ -2,6 +2,7 @@ import { readFileSync } from "fs";
 import path from "path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { SeasonShare } from "./season-share";
 
 const TEAM_COLORS: Record<string, string> = {
   "Mumbai Indians": "#004BA0",
@@ -122,9 +123,18 @@ export default async function SeasonPage({
       </div>
 
       <div className="mb-10 text-center">
-        <h1 className="text-7xl font-bold tracking-tight text-foreground">
-          {year}
-        </h1>
+        <div className="flex items-center justify-center gap-3">
+          <h1 className="text-7xl font-bold tracking-tight text-foreground">
+            {year}
+          </h1>
+          <SeasonShare
+            year={recap.season}
+            champion={recap.champion}
+            totalMatches={recap.totalMatches}
+            topScorer={recap.topScorer}
+            topWicketTaker={recap.topWicketTaker}
+          />
+        </div>
         <div className="mt-4 text-xl font-semibold" style={{ color: champColor }}>
           🏆 {recap.champion}
         </div>
