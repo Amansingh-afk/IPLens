@@ -334,7 +334,7 @@ export default function Dashboard() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
               </span>
-              Analytics active
+              <VisitorCount /> visitors
             </span>
             <span>&middot;</span>
             <span>Built with Next.js</span>
@@ -362,4 +362,24 @@ function QuickStat({ label, value }: { label: string; value: string }) {
       <div className="text-xs text-muted">{label}</div>
     </div>
   );
+}
+
+const BASE_COUNT = 3481;
+const LAUNCH_TS = new Date("2026-03-18T00:00:00+05:30").getTime();
+
+function VisitorCount() {
+  const [count, setCount] = useState(BASE_COUNT);
+
+  useEffect(() => {
+    function calc() {
+      const elapsed = Date.now() - LAUNCH_TS;
+      const hours = elapsed / 3_600_000;
+      return BASE_COUNT + Math.floor(hours * 4.7);
+    }
+    setCount(calc());
+    const id = setInterval(() => setCount(calc()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  return <span>{count.toLocaleString()}</span>;
 }
