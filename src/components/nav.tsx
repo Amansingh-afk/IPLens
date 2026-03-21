@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useSupportAction } from "./support-modal";
 
 const links = [
   { href: "/", label: "Dashboard" },
@@ -17,6 +18,7 @@ const links = [
 export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const handleSupport = useSupportAction();
 
   return (
     <nav className="sticky top-0 z-50 border-b border-card-border bg-background/80 backdrop-blur-md">
@@ -49,6 +51,16 @@ export function Nav() {
         </div>
 
         <div className="ml-auto flex items-center gap-2 shrink-0">
+          <button
+            onClick={handleSupport}
+            className="flex items-center gap-1.5 rounded-md border border-card-border px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:border-pink-500/50 hover:text-pink-400 cursor-pointer"
+            title="Support IPLens"
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" className="text-pink-400">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+            <span className="hidden sm:inline">Support</span>
+          </button>
           <a
             href="https://github.com/Amansingh-afk/IPLens"
             target="_blank"

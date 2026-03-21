@@ -7,6 +7,7 @@ import { HeadToHead } from "@/components/head-to-head";
 import { PlayerTimeline } from "@/components/player-timeline";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useSupportAction } from "@/components/support-modal";
 
 const OTD_TEAM_COLORS: Record<string, string> = {
   "Mumbai Indians": "#004BA0",
@@ -66,6 +67,7 @@ export default function Dashboard() {
   const [playerFading, setPlayerFading] = useState(false);
   const [rivalryFading, setRivalryFading] = useState(false);
 
+  const handleSupport = useSupportAction();
   const [otdMatches, setOtdMatches] = useState<OTDMatch[]>([]);
   const [otdLabel, setOtdLabel] = useState("");
 
@@ -306,22 +308,82 @@ export default function Dashboard() {
             <QuickStat label="Deliveries" value="278K" />
           </div>
         </BentoCard>
+
+        {/* Fantasy Cricket CTA */}
+        <a
+          href="https://www.dream11.com"
+          target="_blank"
+          rel="noopener noreferrer sponsored"
+          className="group relative flex flex-col overflow-hidden rounded-2xl border border-card-border bg-card p-5 transition-all duration-300 hover:border-white/20 hover:scale-[1.01] min-h-[180px]"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            style={{
+              background: "radial-gradient(600px circle at 50% 50%, #22c55e10, transparent 40%)",
+            }}
+          />
+          <div className="mb-3 flex items-baseline justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Play Fantasy Cricket</h3>
+              <p className="mt-0.5 text-xs text-muted">Put your IPL knowledge to the test</p>
+            </div>
+            <span className="text-xs text-muted opacity-0 transition-opacity group-hover:opacity-100">
+              Play →
+            </span>
+          </div>
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">
+            <div className="flex items-center gap-2">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-emerald-400">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+            </div>
+            <p className="text-xs text-muted max-w-48">
+              Think you know who&apos;ll score big tonight? Back your stats with fantasy picks.
+            </p>
+          </div>
+        </a>
       </div>
 
-      <footer className="mt-12 border-t border-card-border pt-6 pb-8">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex items-center gap-2 text-xs text-muted">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            </span>
-            Analytics active
+      <footer className="mt-12 border-t border-card-border pt-8 pb-10">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-sm text-muted">
+              Built by cricket nerds, for cricket nerds.
+            </p>
+            <button
+              onClick={handleSupport}
+              className="inline-flex items-center gap-2 rounded-lg border border-pink-500/30 bg-pink-500/5 px-4 py-2 text-sm font-medium text-pink-400 transition-all hover:border-pink-500/50 hover:bg-pink-500/10 cursor-pointer"
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+              Support IPLens
+            </button>
           </div>
-          <p className="text-xs text-muted/60">
-            Built with Next.js &middot; Powered by Vercel Analytics
-          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-muted/60">
+            <span className="flex items-center gap-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+              Analytics active
+            </span>
+            <span>&middot;</span>
+            <span>Built with Next.js</span>
+            <span>&middot;</span>
+            <a
+              href="https://github.com/Amansingh-afk/IPLens"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              GitHub
+            </a>
+          </div>
         </div>
       </footer>
+
     </div>
   );
 }
