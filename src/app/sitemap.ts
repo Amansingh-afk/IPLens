@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import players from "../../public/data/players.json";
 import recaps from "../../public/data/season-recaps.json";
+import { generateAllMatchSlugs } from "@/lib/match-utils";
 
 const SITE_URL = "https://iplens.in";
 
@@ -45,5 +46,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })
   );
 
-  return [...staticRoutes, ...seasonRoutes, ...playerRoutes];
+  const matchRoutes: MetadataRoute.Sitemap = generateAllMatchSlugs().map(
+    (slug) => ({
+      url: `${SITE_URL}/match/${slug}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    })
+  );
+
+  return [...staticRoutes, ...seasonRoutes, ...playerRoutes, ...matchRoutes];
 }

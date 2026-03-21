@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import Image from "next/image";
+import Link from "next/link";
 import { ShareModal, ShareButton } from "@/components/share-modal";
+import { TEAM_TO_SLUG } from "@/lib/match-utils";
 import type { ShareCardProps } from "@/components/share-card";
 
 interface Matchup {
@@ -328,6 +330,19 @@ export function HeadToHead({
             <div className="text-xs text-muted">
               Seasons: {matchup.seasons.join(", ")}
             </div>
+            {(() => {
+              const s1 = TEAM_TO_SLUG[team1] ?? "";
+              const s2 = TEAM_TO_SLUG[team2] ?? "";
+              const href = s1 < s2 ? `/match/${s1}-vs-${s2}` : `/match/${s2}-vs-${s1}`;
+              return (
+                <Link
+                  href={href}
+                  className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  View full match preview →
+                </Link>
+              );
+            })()}
           </div>
         </div>
       ) : (
