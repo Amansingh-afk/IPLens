@@ -2,8 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 
-const UPI_LINK = "upi://pay?pa=9309513244@ybl&pn=IPLens&cu=INR";
-
 export function SupportModal() {
   const [open, setOpen] = useState(false);
 
@@ -66,13 +64,6 @@ export function SupportModal() {
             <p className="mt-3 text-xs text-muted">Scan with any UPI app</p>
           </div>
 
-          <a
-            href={UPI_LINK}
-            className="w-full rounded-lg bg-pink-500/10 border border-pink-500/30 px-4 py-2.5 text-sm font-medium text-pink-400 transition-all hover:bg-pink-500/20 hover:border-pink-500/50 sm:hidden"
-          >
-            Pay via UPI App
-          </a>
-
           <p className="text-xs text-muted/50">
             Every contribution keeps the stats flowing. Thank you!
           </p>
@@ -84,11 +75,6 @@ export function SupportModal() {
 
 export function useSupportAction() {
   return useCallback(() => {
-    const isMobile = window.matchMedia("(max-width: 640px)").matches;
-    if (isMobile) {
-      window.location.href = UPI_LINK;
-    } else {
-      window.dispatchEvent(new Event("open-support"));
-    }
+    window.dispatchEvent(new Event("open-support"));
   }, []);
 }
